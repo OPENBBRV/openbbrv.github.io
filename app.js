@@ -93,11 +93,17 @@ document.getElementById("errorCount").innerText = total
 
 function parseDRC(text){
 
-const lines = text.split("\n").map(l=>l.trim())
+const lines = text
+.replace(/\r/g,"")
+.split("\n")
+.map(l => l.trim())
+.filter(Boolean)
 
 let index = 0
 
-const [cell,scale] = lines[index++].split(" ")
+const [cell,scale] = lines[index].split(/\s+/)
+
+index++
 
 const data = {
 cell,
@@ -105,68 +111,73 @@ scale:Number(scale),
 rules:[]
 }
 
+let currentRule = null
+let currentError = null
+let transform = null
+let cellName = cell
+
 
 while(index < lines.length){
 
-let line = lines[index]
+const line = lines[index]
 
-if(!line.startsWith("GR")){
-index++
-continue
-}
 
-const rule = {
+/* ---------- RULE ---------- */
+
+if(line.startsWith("GR")){
+
+currentRule = {
 name:line,
 description:"",
 errors:[]
 }
 
+data.rules.push(currentRule)
+
 index++
-index +=3
 
-rule.description = lines[index++]
+/* skip metadata */
+index += 3
 
-while(lines[index]?.startsWith("Note") ||
-lines[index]?.startsWith("HINT")){
+if(lines[index])
+currentRule.description = lines[index++]
 
-rule.description += " " + lines[index++]
+while(/^Note|^HINT/.test(lines[index] || "")){
+currentRule.description += " " + lines[index++]
+}
 
+continue
 }
 
 
 
-while(
-lines[index]?.startsWith("e") ||
-lines[index]?.startsWith("p")
-){
+/* ---------- ERROR ---------- */
 
-const parts = lines[index].split(/\s+/)
+if(/^[ep]\s/.test(line)){
 
-const type = parts[0]
+const parts = line.split(/\s+/)
 
-const id = parts.slice(1).join(" ")
+currentError = {
+type:parts[0],
+id:parts.slice(1).join(" "),
+cell:cellName,
+coords:[]
+}
+
+currentRule.errors.push(currentError)
+
+transform = null
+cellName = data.cell
 
 index++
-
-let transform = null
-let cellName = data.cell
-
-const coords = []
+continue
+}
 
 
 
-while(
-index < lines.length &&
-!lines[index].startsWith("e") &&
-!lines[index].startsWith("p") &&
-!lines[index].startsWith("GR")
-){
+/* ---------- SUBCELL ---------- */
 
-let line = lines[index]
-
-
-
-if(line.startsWith("CN")){
+if(/^CN\s/.test(line)){
 
 const p = line.split(/\s+/)
 
@@ -181,17 +192,26 @@ Number(p[7]),
 Number(p[8])
 ]
 
+if(currentError)
+currentError.cell = cellName
+
 index++
 continue
 }
 
 
 
+/* ---------- COORDINATES ---------- */
+
 const nums = line
 .split(/\s+/)
 .map(Number)
 
-if(nums.length >= 4 && nums.every(n => !isNaN(n))){
+if(
+currentError &&
+nums.length >= 2 &&
+nums.every(Number.isFinite)
+){
 
 let coord = nums
 
@@ -199,26 +219,12 @@ if(transform){
 coord = transformCoord(coord,transform)
 }
 
-coords.push(coord)
+currentError.coords.push(coord)
 
 }
+
 
 index++
-
-}
-
-
-
-rule.errors.push({
-type,
-id,
-cell:cellName,
-coords
-})
-
-}
-
-data.rules.push(rule)
 
 }
 
@@ -319,9 +325,11 @@ e.innerText=`${err.type} ${err.id} (${err.cell})`
 e.onclick=()=>{
 
 state.selectedError = err
+state.selectedRule = rule   // asegurar que la regla esté seleccionada
 
 renderRules()   // refresca highlight
 renderCoords()
+renderDescription()
 
 }
 
