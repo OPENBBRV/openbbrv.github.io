@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>OPEN SOURCE DRC Results Viewer</title>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<header>
+<h3>OPEN SOURCE DRC Results Viewer</h3>
+<p>by Eduardo Camacho</p> <br>
+<input type="file" id="fileInput">
+
+<div id="headerInfo">
+
+Cell: <span id="cellName">-</span>
+Total Errors: <span id="errorCount">0</span>
+</div>
+
+<label>
+<input type="checkbox" id="hideWaived">
+Hide Waived
+</label>
+
+<input type="text" id="searchRule" placeholder="Search rule...">
+
+<div class="buttons">
+<button id="waiveBtn">Waive</button>
+<button id="unwaiveBtn">Unwaive</button>
+<button id="fixedBtn">Mark Fixed</button>
+</div>
+
+</header>
+
+<main>
+
+<div id="leftPanel"></div>
+
+<div id="rightPanel">
+
+<h3>Error Details</h3>
+
+<div id="coords"></div>
+
+</div>
+
+</main>
+
+<footer>
+
+<h3>Rule Description</h3>
+
+<div id="ruleDescription"></div>
+
+</footer>
+
+<script src="app.js"></script>
+
+</body>
+</html>
