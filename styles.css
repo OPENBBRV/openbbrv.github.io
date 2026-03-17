@@ -1,13 +1,14 @@
 body{
 font-family: Arial;
 margin:0;
+background-color: #ffffff;
 }
 
 header{
 padding:10px;
 padding-top: 20px;
 padding-bottom: 20px;
-background:#a7a7a7;
+background:#87d3ff;
 color:rgb(4, 4, 4);
 display:flex;
 gap:15px;
@@ -42,21 +43,23 @@ overflow:auto;
 
 .rule{
 cursor:pointer;
-padding:5px;
+padding:8px;
 background:#eee;
 font-weight: bold;
 margin-top:5px;
+border-radius: 5px;
 }
 
 .rule-selected{
-    cursor:pointer;
-padding:5px;
-background:#abdcff;
+cursor:pointer;
+padding: 8px;
+background:#ffeeab;
 font-weight: bold;
 margin-top:5px;
 }
 
 .error{
+padding: 4px;
 padding-left:20px;
 cursor:pointer;
 color: rgb(149, 0, 0);
@@ -87,9 +90,30 @@ align-items:center;
 gap:6px;
 }
 
+
+
 .expand-btn{
-width:20px;
+width:10px;
+padding: 0px;
+padding-bottom: 4px;
 height:20px;
 cursor:pointer;
-background-color: #eee;
+background-color: #eeeeee00;
+font-size: 16px;
+}
+
+button{
+padding: 8px;
+    padding-inline: 16px;
+background-color: #ffffff;
+border:0px solid;
+border-radius: 5px;
+}
+
+input{
+    padding: 5px;
+    padding-inline: 16px;
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
 }
