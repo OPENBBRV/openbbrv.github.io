@@ -289,6 +289,13 @@ div.classList.add("waived")
 // select rule on row click
 div.onclick = ()=>{
     state.selectedRule = rule
+
+    // only clear if error does NOT belong to this rule
+    if(!rule.errors.includes(state.selectedError)){
+        state.selectedError = null
+        document.getElementById("coords").innerText = ""
+    }
+
     renderRules()
     renderDescription()
 }
@@ -391,3 +398,80 @@ document.getElementById("ruleDescription")
 .innerText = state.selectedRule.description
 
 }
+
+//Keyboard navigation
+
+document.addEventListener("keydown", (e)=>{
+
+// ignore typing in inputs
+if(["INPUT","TEXTAREA"].includes(document.activeElement.tagName))
+return
+
+// nothing selected → do nothing
+if(!state.selectedRule) return
+
+const errors = state.selectedRule.errors
+
+// ↓ next error
+if(e.key === "ArrowDown"){
+
+e.preventDefault()
+
+if(!errors.length) return
+
+let idx = errors.indexOf(state.selectedError)
+
+// if none selected → go first
+if(idx === -1) idx = 0
+else idx = Math.min(idx + 1, errors.length - 1)
+
+state.selectedError = errors[idx]
+
+// ensure expanded
+state.expandedRules.add(state.selectedRule.name)
+
+renderRules()
+renderCoords()
+renderDescription()
+}
+
+// ↑ previous error
+if(e.key === "ArrowUp"){
+
+e.preventDefault()
+
+if(!errors.length) return
+
+let idx = errors.indexOf(state.selectedError)
+
+// if none selected → go last
+if(idx === -1) idx = errors.length - 1
+else idx = Math.max(idx - 1, 0)
+
+state.selectedError = errors[idx]
+
+state.expandedRules.add(state.selectedRule.name)
+
+renderRules()
+renderCoords()
+renderDescription()
+}
+
+// W → waive/unwaive rule
+if(e.key.toLowerCase() === "w"){
+
+e.preventDefault()
+
+const name = state.selectedRule.name
+
+if(state.waived.has(name)){
+state.waived.delete(name)
+}else{
+state.waived.add(name)
+}
+
+renderRules()
+renderDescription()
+}
+
+})
