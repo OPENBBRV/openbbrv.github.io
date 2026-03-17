@@ -541,4 +541,23 @@ renderCoords()
 renderDescription()
 }
 
+// E → expand/collapse selected rule
+if(e.key.toLowerCase() === "e"){
+
+e.preventDefault()
+
+if(!state.selectedRule) return
+
+const name = state.selectedRule.name
+
+if(state.expandedRules.has(name)){
+state.expandedRules.delete(name)
+}else{
+state.expandedRules.add(name)
+}
+
+renderRules()
+}
+
+
 })
