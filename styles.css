@@ -66,6 +66,17 @@ color: rgb(149, 0, 0);
 font-weight: medium;
 }
 
+
+.error-waived{
+opacity:0.4;
+text-decoration:line-through;
+}
+
+.error-fixed{
+opacity:0.4;
+background-color:#c8f7c5;
+}
+
 #coords
 {
     color: green;
@@ -76,7 +87,7 @@ background:#96ceff;
 }
 
 .error-selected{
-background: rgb(255, 173, 173);
+background: rgb(255, 248, 200);
 }
 
 .waived{

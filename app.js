@@ -11,6 +11,8 @@ search:"",
 
 waived:new Set(),
 fixed:new Set(),
+waivedErrors: new Set(),
+fixedErrors: new Set(),
 
 expandedRules:new Set()
 
@@ -35,23 +37,40 @@ renderRules()
 })
 
 document.getElementById("waiveBtn").onclick = ()=>{
-if(!state.selectedRule) return
-state.waived.add(state.selectedRule.name)
-renderRules()
+if(!state.selectedError) return
+
+const key = getErrorKey(state.selectedError, state.selectedRule)
+
+if(state.waivedErrors.has(key)){
+state.waivedErrors.delete(key)
+}else{
+state.waivedErrors.add(key)
 }
 
-document.getElementById("unwaiveBtn").onclick = ()=>{
-if(!state.selectedRule) return
-state.waived.delete(state.selectedRule.name)
 renderRules()
+renderCoords()
+renderDescription()
 }
 
 document.getElementById("fixedBtn").onclick = ()=>{
-if(!state.selectedRule) return
-state.fixed.add(state.selectedRule.name)
-renderRules()
+if(!state.selectedError) return
+
+const key = getErrorKey(state.selectedError, state.selectedRule)
+
+if(state.fixedErrors.has(key)){
+state.fixedErrors.delete(key)
+}else{
+state.fixedErrors.add(key)
 }
 
+renderRules()
+renderCoords()
+renderDescription()
+}
+
+function getErrorKey(err, rule){
+return `${rule.name}__${err.type}__${err.id}__${err.cell}`
+}
 
 
 function loadFile(e){
@@ -265,8 +284,12 @@ panel.innerHTML=""
 state.data.rules
 .filter(rule=>{
 
-if(state.hideWaived && state.waived.has(rule.name))
-return false
+const visibleErrors = rule.errors.filter(err=>{
+const key = getErrorKey(err, rule)
+return !(state.hideWaived && state.waivedErrors.has(key))
+})
+
+if(visibleErrors.length === 0) return false
 
 if(state.search &&
 !rule.name.toLowerCase().includes(state.search))
@@ -282,6 +305,7 @@ div.className="rule"
 
 if(state.selectedRule === rule)
 div.classList.add("rule-selected")
+
 
 if(state.waived.has(rule.name))
 div.classList.add("waived")
@@ -323,7 +347,13 @@ renderRules()
 
 // label
 const label = document.createElement("span")
-label.innerText = `${rule.name} (${rule.errors.length})`
+
+const visibleErrors = rule.errors.filter(err=>{
+const key = getErrorKey(err, rule)
+return !(state.hideWaived && state.waivedErrors.has(key))
+})
+
+label.innerText = `${rule.name} (${visibleErrors.length})`
 
 row.appendChild(btn)
 row.appendChild(label)
@@ -335,11 +365,26 @@ if(state.expandedRules.has(rule.name)){
 
 rule.errors.forEach(err=>{
 
+const key = getErrorKey(err, rule)
+
+// hide waived if toggle is on
+if(state.hideWaived && state.waivedErrors.has(key)){
+return
+}
+
 const e = document.createElement("div")
 e.className="error"
 
 if(state.selectedError === err){
 e.classList.add("error-selected")
+}
+
+if(state.waivedErrors.has(key)){
+e.classList.add("error-waived")
+}
+
+if(state.fixedErrors.has(key)){
+e.classList.add("error-fixed")
 }
 
 e.innerText=`${err.type} ${err.id} (${err.cell})`
@@ -462,15 +507,37 @@ if(e.key.toLowerCase() === "w"){
 
 e.preventDefault()
 
-const name = state.selectedRule.name
+if(!state.selectedError) return
 
-if(state.waived.has(name)){
-state.waived.delete(name)
+const key = getErrorKey(state.selectedError, state.selectedRule)
+
+if(state.waivedErrors.has(key)){
+state.waivedErrors.delete(key)
 }else{
-state.waived.add(name)
+state.waivedErrors.add(key)
 }
 
 renderRules()
+renderCoords()
+renderDescription()
+}
+
+if(e.key.toLowerCase() === "f"){
+
+e.preventDefault()
+
+if(!state.selectedError) return
+
+const key = getErrorKey(state.selectedError, state.selectedRule)
+
+if(state.fixedErrors.has(key)){
+state.fixedErrors.delete(key)
+}else{
+state.fixedErrors.add(key)
+}
+
+renderRules()
+renderCoords()
 renderDescription()
 }
 
