@@ -4,6 +4,7 @@ data:null,
 
 selectedRule:null,
 selectedError:null,
+selectedCell:null,
 
 hideWaived:false,
 search:"",
@@ -161,13 +162,11 @@ currentError = {
 type:parts[0],
 id:parts.slice(1).join(" "),
 cell:cellName,
+transform,
 coords:[]
 }
 
 currentRule.errors.push(currentError)
-
-transform = null
-cellName = data.cell
 
 index++
 continue
@@ -261,7 +260,6 @@ return result
 function renderRules(){
 
 const panel = document.getElementById("leftPanel")
-
 panel.innerHTML=""
 
 state.data.rules
@@ -277,19 +275,35 @@ return false
 return true
 
 })
-
 .forEach(rule=>{
 
 const div = document.createElement("div")
-
 div.className="rule"
+
+if(state.selectedRule === rule)
+div.classList.add("rule-selected")
 
 if(state.waived.has(rule.name))
 div.classList.add("waived")
 
-div.innerText = `${rule.name} (${rule.errors.length})`
-
+// select rule on row click
 div.onclick = ()=>{
+    state.selectedRule = rule
+    renderRules()
+    renderDescription()
+}
+
+// row container
+const row = document.createElement("div")
+row.className = "rule-row"
+
+// expand / collapse button
+const btn = document.createElement("button")
+btn.className = "expand-btn"
+btn.innerText = state.expandedRules.has(rule.name) ? "▾" : "▸"
+
+btn.onclick = (ev)=>{
+ev.stopPropagation()
 
 if(state.expandedRules.has(rule.name)){
 state.expandedRules.delete(rule.name)
@@ -297,37 +311,40 @@ state.expandedRules.delete(rule.name)
 state.expandedRules.add(rule.name)
 }
 
-state.selectedRule = rule
-
 renderRules()
-renderDescription()
-
 }
 
+// label
+const label = document.createElement("span")
+label.innerText = `${rule.name} (${rule.errors.length})`
+
+row.appendChild(btn)
+row.appendChild(label)
+
+div.appendChild(row)
 panel.appendChild(div)
-
-
 
 if(state.expandedRules.has(rule.name)){
 
 rule.errors.forEach(err=>{
 
 const e = document.createElement("div")
-
 e.className="error"
 
 if(state.selectedError === err){
-    e.classList.add("error-selected")
+e.classList.add("error-selected")
 }
 
 e.innerText=`${err.type} ${err.id} (${err.cell})`
 
-e.onclick=()=>{
+e.onclick=(ev)=>{
+
+ev.stopPropagation()
 
 state.selectedError = err
-state.selectedRule = rule   // asegurar que la regla esté seleccionada
+state.selectedRule = rule
 
-renderRules()   // refresca highlight
+renderRules()
 renderCoords()
 renderDescription()
 

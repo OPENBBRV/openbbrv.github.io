@@ -48,6 +48,14 @@ font-weight: bold;
 margin-top:5px;
 }
 
+.rule-selected{
+    cursor:pointer;
+padding:5px;
+background:#abdcff;
+font-weight: bold;
+margin-top:5px;
+}
+
 .error{
 padding-left:20px;
 cursor:pointer;
@@ -71,4 +79,17 @@ background: rgb(255, 173, 173);
 .waived{
 opacity:0.4;
 color: gray;
+}
+
+.rule-row{
+display:flex;
+align-items:center;
+gap:6px;
+}
+
+.expand-btn{
+width:20px;
+height:20px;
+cursor:pointer;
+background-color: #eee;
 }
