@@ -3,15 +3,21 @@ const state = {
 data:null,
 
 selectedRule:null,
+
 selectedError:null,
+
 selectedCell:null,
 
 hideWaived:false,
+
 search:"",
 
 waived:new Set(),
+
 fixed:new Set(),
+
 waivedErrors: new Set(),
+
 fixedErrors: new Set(),
 
 expandedRules:new Set()
@@ -22,54 +28,81 @@ expandedRules:new Set()
 // UI EVENTS
 
 document.getElementById("fileInput")
+
 .addEventListener("change", loadFile)
 
 document.getElementById("searchRule")
+
 .addEventListener("input", e=>{
+
 state.search = e.target.value.toLowerCase()
+
 renderRules()
+
 })
 
 document.getElementById("hideWaived")
+
 .addEventListener("change", e=>{
+
 state.hideWaived = e.target.checked
+
 renderRules()
+
 })
 
 document.getElementById("waiveBtn").onclick = ()=>{
+
 if(!state.selectedError) return
 
 const key = getErrorKey(state.selectedError, state.selectedRule)
 
 if(state.waivedErrors.has(key)){
+
 state.waivedErrors.delete(key)
+
 }else{
+
 state.waivedErrors.add(key)
+
 }
 
 renderRules()
+
 renderCoords()
+
 renderDescription()
+
 }
 
 document.getElementById("fixedBtn").onclick = ()=>{
+
 if(!state.selectedError) return
 
 const key = getErrorKey(state.selectedError, state.selectedRule)
 
 if(state.fixedErrors.has(key)){
+
 state.fixedErrors.delete(key)
+
 }else{
+
 state.fixedErrors.add(key)
+
 }
 
 renderRules()
+
 renderCoords()
+
 renderDescription()
+
 }
 
 function getErrorKey(err, rule){
+
 return `${rule.name}__${err.type}__${err.id}__${err.cell}`
+
 }
 
 
@@ -84,9 +117,11 @@ reader.onload = ev => {
 state.data = parseDRC(ev.target.result)
 
 console.log("Parsed DRC JSON")
+
 console.log(JSON.stringify(state.data,null,2))
 
 updateHeader()
+
 renderRules()
 
 }
@@ -94,7 +129,6 @@ renderRules()
 reader.readAsText(file)
 
 }
-
 
 
 function updateHeader(){
@@ -110,13 +144,16 @@ document.getElementById("errorCount").innerText = total
 }
 
 
-
 function parseDRC(text){
 
 const lines = text
+
 .replace(/\r/g,"")
+
 .split("\n")
+
 .map(l => l.trim())
+
 .filter(Boolean)
 
 let index = 0
@@ -126,14 +163,21 @@ const [cell,scale] = lines[index].split(/\s+/)
 index++
 
 const data = {
+
 cell,
+
 scale:Number(scale),
+
 rules:[]
+
 }
 
 let currentRule = null
+
 let currentError = null
+
 let transform = null
+
 let cellName = cell
 
 
@@ -147,9 +191,13 @@ const line = lines[index]
 if(line.startsWith("GR")){
 
 currentRule = {
+
 name:line,
+
 description:"",
+
 errors:[]
+
 }
 
 data.rules.push(currentRule)
@@ -157,18 +205,22 @@ data.rules.push(currentRule)
 index++
 
 /* skip metadata */
+
 index += 3
 
 if(lines[index])
+
 currentRule.description = lines[index++]
 
 while(/^Note|^HINT/.test(lines[index] || "")){
+
 currentRule.description += " " + lines[index++]
+
 }
 
 continue
-}
 
+}
 
 
 /* ---------- ERROR ---------- */
@@ -178,19 +230,26 @@ if(/^[ep]\s/.test(line)){
 const parts = line.split(/\s+/)
 
 currentError = {
+
 type:parts[0],
+
 id:parts.slice(1).join(" "),
+
 cell:cellName,
+
 transform,
+
 coords:[]
+
 }
 
 currentRule.errors.push(currentError)
 
 index++
-continue
-}
 
+continue
+
+}
 
 
 /* ---------- SUBCELL ---------- */
@@ -202,39 +261,56 @@ const p = line.split(/\s+/)
 cellName = p[1]
 
 transform = [
+
 Number(p[3]),
+
 Number(p[4]),
+
 Number(p[5]),
+
 Number(p[6]),
+
 Number(p[7]),
+
 Number(p[8])
+
 ]
 
 if(currentError)
+
 currentError.cell = cellName
 
 index++
-continue
-}
 
+continue
+
+}
 
 
 /* ---------- COORDINATES ---------- */
 
 const nums = line
+
 .split(/\s+/)
+
 .map(Number)
 
 if(
+
 currentError &&
+
 nums.length >= 2 &&
+
 nums.every(Number.isFinite)
+
 ){
 
 let coord = nums
 
 if(transform){
+
 coord = transformCoord(coord,transform)
+
 }
 
 currentError.coords.push(coord)
@@ -251,7 +327,6 @@ return data
 }
 
 
-
 function transformCoord(coord,transform){
 
 const [a,b,c,d,tx,ty] = transform
@@ -261,11 +336,15 @@ const result = []
 for(let i=0;i<coord.length;i+=2){
 
 const x = coord[i]
+
 const y = coord[i+1]
 
 result.push(
+
 a*x + b*y + tx,
+
 c*x + d*y + ty
+
 )
 
 }
@@ -275,90 +354,125 @@ return result
 }
 
 
-
 function renderRules(){
 
 const panel = document.getElementById("leftPanel")
+
 panel.innerHTML=""
 
 state.data.rules
+
 .filter(rule=>{
 
 const visibleErrors = rule.errors.filter(err=>{
+
 const key = getErrorKey(err, rule)
+
 return !(state.hideWaived && state.waivedErrors.has(key))
+
 })
 
 if(visibleErrors.length === 0) return false
 
 if(state.search &&
+
 !rule.name.toLowerCase().includes(state.search))
+
 return false
 
 return true
 
 })
+
 .forEach(rule=>{
 
 const div = document.createElement("div")
+
 div.className="rule"
 
 if(state.selectedRule === rule)
+
 div.classList.add("rule-selected")
 
 
 if(state.waived.has(rule.name))
+
 div.classList.add("waived")
 
 // select rule on row click
+
 div.onclick = ()=>{
+
     state.selectedRule = rule
 
     // only clear if error does NOT belong to this rule
+
     if(!rule.errors.includes(state.selectedError)){
+
         state.selectedError = null
+
         document.getElementById("coords").innerText = ""
+
     }
 
     renderRules()
+
     renderDescription()
+
 }
 
 // row container
+
 const row = document.createElement("div")
+
 row.className = "rule-row"
 
 // expand / collapse button
+
 const btn = document.createElement("button")
+
 btn.className = "expand-btn"
+
 btn.innerText = state.expandedRules.has(rule.name) ? "▾" : "▸"
 
 btn.onclick = (ev)=>{
+
 ev.stopPropagation()
 
 if(state.expandedRules.has(rule.name)){
+
 state.expandedRules.delete(rule.name)
+
 }else{
+
 state.expandedRules.add(rule.name)
+
 }
 
 renderRules()
+
 }
 
 // label
+
 const label = document.createElement("span")
 
 const visibleErrors = rule.errors.filter(err=>{
+
 const key = getErrorKey(err, rule)
+
 return !(state.hideWaived && state.waivedErrors.has(key))
+
 })
 
 label.innerText = `${rule.name} (${visibleErrors.length})`
 
 row.appendChild(btn)
+
 row.appendChild(label)
 
 div.appendChild(row)
+
 panel.appendChild(div)
 
 if(state.expandedRules.has(rule.name)){
@@ -368,23 +482,33 @@ rule.errors.forEach(err=>{
 const key = getErrorKey(err, rule)
 
 // hide waived if toggle is on
+
 if(state.hideWaived && state.waivedErrors.has(key)){
+
 return
+
 }
 
 const e = document.createElement("div")
+
 e.className="error"
 
 if(state.selectedError === err){
+
 e.classList.add("error-selected")
+
 }
 
 if(state.waivedErrors.has(key)){
+
 e.classList.add("error-waived")
+
 }
 
 if(state.fixedErrors.has(key)){
+
 e.classList.add("error-fixed")
+
 }
 
 e.innerText=`${err.type} ${err.id} (${err.cell})`
@@ -394,10 +518,13 @@ e.onclick=(ev)=>{
 ev.stopPropagation()
 
 state.selectedError = err
+
 state.selectedRule = rule
 
 renderRules()
+
 renderCoords()
+
 renderDescription()
 
 }
@@ -413,7 +540,6 @@ panel.appendChild(e)
 }
 
 
-
 function renderCoords(){
 
 const scale = state.data.scale
@@ -423,10 +549,13 @@ const err = state.selectedError
 if(!err) return
 
 const coords = err.coords.map(group=>
+
 group.map(c => (c/scale).toFixed(4)).join(" , ")
+
 )
 
 document.getElementById("coords").innerText =
+
 `Cell: ${err.cell}
 
 ` + coords.join("\n")
@@ -434,14 +563,52 @@ document.getElementById("coords").innerText =
 }
 
 
-
 function renderDescription(){
 
 if(!state.selectedRule) return
 
 document.getElementById("ruleDescription")
+
 .innerText = state.selectedRule.description
 
+}
+
+function getBoundingBox(err){
+
+const flat = err.coords.flat()
+
+let minX = Infinity, minY = Infinity
+let maxX = -Infinity, maxY = -Infinity
+
+for(let i = 0; i < flat.length; i += 2){
+const x = flat[i]
+const y = flat[i+1]
+
+if(x < minX) minX = x
+if(y < minY) minY = y
+if(x > maxX) maxX = x
+if(y > maxY) maxY = y
+}
+
+return { minX, minY, maxX, maxY }
+}
+
+function scaleBox(box){
+
+const s = state.data.scale
+
+return {
+left: box.minX / s,
+bottom: box.minY / s,
+right: box.maxX / s,
+top: box.maxY / s
+}
+}
+
+function generateTCL(box){
+
+return `mr -left ${box.left} -bottom ${box.bottom} -right ${box.right} -top ${box.top}; ` +
+       `mgc_rve_zoom -left ${box.left} -bottom ${box.bottom} -right ${box.right} -top ${box.top} -zoom {1,0}`
 }
 
 //Keyboard navigation
@@ -449,15 +616,19 @@ document.getElementById("ruleDescription")
 document.addEventListener("keydown", (e)=>{
 
 // ignore typing in inputs
+
 if(["INPUT","TEXTAREA"].includes(document.activeElement.tagName))
+
 return
 
 // nothing selected → do nothing
+
 if(!state.selectedRule) return
 
 const errors = state.selectedRule.errors
 
 // ↓ next error
+
 if(e.key === "ArrowDown"){
 
 e.preventDefault()
@@ -467,20 +638,27 @@ if(!errors.length) return
 let idx = errors.indexOf(state.selectedError)
 
 // if none selected → go first
+
 if(idx === -1) idx = 0
+
 else idx = Math.min(idx + 1, errors.length - 1)
 
 state.selectedError = errors[idx]
 
 // ensure expanded
+
 state.expandedRules.add(state.selectedRule.name)
 
 renderRules()
+
 renderCoords()
+
 renderDescription()
+
 }
 
 // ↑ previous error
+
 if(e.key === "ArrowUp"){
 
 e.preventDefault()
@@ -490,7 +668,9 @@ if(!errors.length) return
 let idx = errors.indexOf(state.selectedError)
 
 // if none selected → go last
+
 if(idx === -1) idx = errors.length - 1
+
 else idx = Math.max(idx - 1, 0)
 
 state.selectedError = errors[idx]
@@ -498,11 +678,48 @@ state.selectedError = errors[idx]
 state.expandedRules.add(state.selectedRule.name)
 
 renderRules()
+
 renderCoords()
+
 renderDescription()
+
 }
 
 // W → waive/unwaive rule
+
+if(e.key.toLowerCase() === "h"){
+
+e.preventDefault()
+
+if(!state.selectedError) return
+
+const rawBox = getBoundingBox(state.selectedError)
+const scaledBox = scaleBox(rawBox)
+
+const cmd = generateTCL(scaledBox)
+
+// copy to clipboard
+navigator.clipboard.writeText(cmd)
+.then(()=>{
+	renderCoords()
+console.log("TCL command copied")
+document.getElementById("coords").innerHTML += `<br><div style="padding: 8px; margin-top:20px; background: #eeeeee; color: black; border-radius: 10px;">${cmd}</div><div style="color: blue;">Command Copied to Clipboard, ready to paste in L-Edit command line</div>`
+})
+.catch(err=>{
+console.error("Clipboard failed", err)
+})
+
+}
+
+if(e.key === "Escape"){
+
+e.preventDefault()
+
+if(!state.selectedError) return
+renderCoords()
+
+}
+
 if(e.key.toLowerCase() === "w"){
 
 e.preventDefault()
@@ -512,14 +729,21 @@ if(!state.selectedError) return
 const key = getErrorKey(state.selectedError, state.selectedRule)
 
 if(state.waivedErrors.has(key)){
+
 state.waivedErrors.delete(key)
+
 }else{
+
 state.waivedErrors.add(key)
+
 }
 
 renderRules()
+
 renderCoords()
+
 renderDescription()
+
 }
 
 if(e.key.toLowerCase() === "f"){
@@ -531,17 +755,25 @@ if(!state.selectedError) return
 const key = getErrorKey(state.selectedError, state.selectedRule)
 
 if(state.fixedErrors.has(key)){
+
 state.fixedErrors.delete(key)
+
 }else{
+
 state.fixedErrors.add(key)
+
 }
 
 renderRules()
+
 renderCoords()
+
 renderDescription()
+
 }
 
 // E → expand/collapse selected rule
+
 if(e.key.toLowerCase() === "e"){
 
 e.preventDefault()
@@ -551,13 +783,19 @@ if(!state.selectedRule) return
 const name = state.selectedRule.name
 
 if(state.expandedRules.has(name)){
+
 state.expandedRules.delete(name)
+
 }else{
+
 state.expandedRules.add(name)
+
 }
 
 renderRules()
+
 }
 
 
 })
+ 

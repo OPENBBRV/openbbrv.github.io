@@ -14,25 +14,20 @@
 <p>by Eduardo Camacho</p> <br>
 <input type="file" id="fileInput">
 
-
-
-
-
-
-<div class="buttons" style="margin-left: 40px;">
-
 <div id="headerInfo">
+
 Cell: <span id="cellName">-</span>
 Total Errors: <span id="errorCount">0</span>
-<label>
-<input style="width: 16px; height: 16px;" type="checkbox" id="hideWaived">
-Hide Waived
-</label>
 </div>
 
+<label>
+<input type="checkbox" id="hideWaived">
+Hide Waived
+</label>
 
-<input type="text" style="padding: 8px;" id="searchRule" placeholder="Search rule...">
+<input type="text" id="searchRule" placeholder="Search rule...">
 
+<div class="buttons">
 <button id="waiveBtn">Waive</button>
 <button id="unwaiveBtn">Unwaive</button>
 <button id="fixedBtn">Mark Fixed</button>
